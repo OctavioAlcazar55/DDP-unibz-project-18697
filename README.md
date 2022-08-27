@@ -65,3 +65,9 @@ As for any data analysis project, the collected data runs a cleaning and filteri
 The project planning kicks off with a brainstorming session for the product features. The product functional objective is clearly described in the first chapter, and then the product feature planning should be executed according to the user requirements.
 
 A prioritization matrix containing the product feature ideas is constructed to have an overview of how complete the product features should be. The product has a functional feature which the end user requires, but additional enhancements could be done to enhance the product. The matrix is divided by effort and user value, displaying with features are considered important or not, and which features take more time to be completed.
+
+A set of user stories are defined for the product development, which are split into two iterations. The chosen framework is the Kanban Board, for which web frameworks like Trello and Whimsical are used for the product planning and task management. The Kanban Boards are suppose to change per user story execution and completion, so the Kanban Boards organized in Trello for planning and for each user stories are shared in the repository.
+
+**Planning Phase**
+
+https://trello.com/b/viV1M5M5/kanban-board-planning-stage
