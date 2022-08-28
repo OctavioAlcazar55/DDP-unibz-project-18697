@@ -59,3 +59,34 @@ def drop_columns(data, data_source="daily"):
 
     print("Removed {0} columns from dataframe".format(len(columns_to_drop)))
     return df
+
+# Function for intersection or outer difference between two lists (converted to sets
+def get_list_inner_outer_join(first_list, second_list, 
+                              operation="outer"):
+    
+    # outer means to get values which are not part of both lists
+    if operation == "outer":
+        return sorted(list(set(first_list).symmetric_difference(set(second_list))))
+    else: # operation == "inner" - intersection for both lists
+        return sorted(list(set(first_list) & set(second_list)))
+    
+# Function for extending dataframe with updated time series data
+def update_timeseries_dataframe(file_path, data,
+                                data_type="cumulative", 
+                                operation="outer"):
+    
+    # 1. Get update data source and open it as a Pandas Dataframe
+    updated_df = read_data(file_path)
+    
+    # 2. Drop unnecesary columns and check null values information
+    updated_df = drop_columns(updated_df, data_source=data_type)
+    
+    # 3. Compute outer intersection of columns between original and updated dataframes
+    to_add_columns = get_list_inner_outer_join(data.columns, 
+                                               updated_df.columns, 
+                                               operation=operation)
+    
+    # 4. Append new date columns into the existing dataframe
+    data = data.join(updated_df.loc[:, to_add_columns])
+    
+    return data
