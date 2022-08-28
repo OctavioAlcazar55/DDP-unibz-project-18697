@@ -90,3 +90,40 @@ def update_timeseries_dataframe(file_path, data,
     data = data.join(updated_df.loc[:, to_add_columns])
     
     return data
+
+# Function for finding countries on a given dataset with more than one entry
+# Thius typically means that the data is collected by region or state
+def get_countries_split_by_regions(data, country_column="Country/Region"):
+    
+    countries_to_aggregate = []
+    
+    list_unique_countries = np.unique(data[country_column])
+
+    for country in list_unique_countries:
+        retrieved_rows = data.loc[data[country_column]==country].shape[0]
+    
+        if retrieved_rows > 1:
+            countries_to_aggregate.append(country)
+        
+    print("There are {0} countries where data needs to be aggregated.".format(len(countries_to_aggregate)))
+
+    return countries_to_aggregate
+
+# Function that sums up rows belonging to the same country for outputting one aggregated value
+def sum_aggregation_dataframe(data, countries_list,
+                              country_column="Country/Region"):
+    
+    for country in countries_list:
+        aggregated_series = data.loc[data[country_column]==country].sum()
+        aggregated_series.values[0] = country
+        
+        drop_indexes = list(data.loc[data[country_column]==country].index)
+        keep_index = drop_indexes[0]
+        
+        data.iloc[keep_index] = aggregated_series
+
+        data = data.drop(drop_indexes[1:]).reset_index(drop=True)
+        
+    return data
+
+
