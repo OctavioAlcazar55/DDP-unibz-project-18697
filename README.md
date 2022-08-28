@@ -71,3 +71,7 @@ A set of user stories are defined for the product development, which are split i
 **Planning Phase**
 
 https://trello.com/b/viV1M5M5/kanban-board-planning-stage
+
+**First Iteration Phase**
+
+https://trello.com/b/bE4akKy7/kanban-board-first-iteration
