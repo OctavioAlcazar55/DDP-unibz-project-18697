@@ -239,7 +239,8 @@ def country_list_formatting(data, data_source="stringency_index",
     
     print("There have been {0} countries removed from the dataset.".format(len(countries_to_remove)))
     
-    return data
+    # By error proof on US4, dataframe needs to be sorted by country name
+    return data.sort_values(country_column, ascending=True)
 
 def formatting_timestamp_string(data, country_column="Country"):
 
