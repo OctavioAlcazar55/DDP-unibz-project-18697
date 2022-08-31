@@ -106,7 +106,7 @@ def drop_columns(data, file_path,
     columns_to_drop = drop_columns_dict[data_source][:-1]
     country_column = drop_columns_dict[data_source][-1]
     
-    # Reading CSV file in a DataFrame
+    # removing columns from dataframe
     df = data.drop(columns_to_drop, axis=1)
 
     print("Removed {0} columns from dataframe".format(len(columns_to_drop)))
@@ -176,7 +176,7 @@ def country_aggregation_dataframe(data, countries_list,
     
     for country in countries_list:
         
-        if data_type == "cumulative":         
+        if data_type == "cumulative" or data_type == "daily":         
             aggregated_series = data.loc[data[country_column]==country].sum()
             aggregated_series.values[0] = country
         else: # data_type == "stringency_index"
@@ -185,7 +185,7 @@ def country_aggregation_dataframe(data, countries_list,
         drop_indexes = list(data.loc[data[country_column]==country].index)
         keep_index = drop_indexes[0]
         
-        if data_type == "cumulative": 
+        if data_type == "cumulative" or data_type == "daily":
             data.iloc[keep_index] = aggregated_series # have to include country name in series
         else: # data_type == "stringency_index"
             data.iloc[keep_index, 1:] = aggregated_series
@@ -281,3 +281,105 @@ def formatting_timestamp_string(data, country_column="Country"):
         updated_timestamps.append(formatted_timestamp)
         
     return updated_timestamps
+
+def check_daily_data_countries(data, file_path,
+                               country_column="Country",
+                               repeated_country=[["Mainland China", "China"],
+                                                 ["UK", "United Kingdom"]]):
+    
+    update_country_name = {
+        " Azerbaijan": "Azerbaijan",
+        "The Bahamas": "Bahamas",
+        "Bahamas, The": "Bahamas",
+        "Ivory Coast": "Cote d'Ivoire",
+        "Burma": "Myanmar",
+        "Cape Verde": "Cabo Verde",
+        "Congo (Brazzaville)": "Congo",
+        "Republic of the Congo": "Congo",
+        "Congo (Kinshasa)": "Democratic Republic of Congo",
+        "Czechia": "Czech Republic",
+        "Korea, South": "South Korea",
+        "The Gambia": "Gambia",
+        "Gambia, The": "Gambia",
+        "Republic of Ireland": "Ireland",
+        "Republic of Korea": "South Korea",
+        "Iran (Islamic Republic of)": "Iran",
+        "Republic of Moldova": "Moldova",
+        "Russian Federation": "Russia",
+        "Taipei and environs": "Taiwan",
+        "Taiwan*": "Taiwan",
+        "East Timor": "Timor-Leste",
+        "US": "United States",
+        "Viet Nam": "Vietnam"
+    }
+
+    date  = file_path.split("/")[-1].split(".")[0]
+    month = date.split("-")[0]
+    day   = date.split("-")[1]
+    year  = date.split("-")[2]
+        
+    if year > "2020":
+        pass
+    elif month > "03":
+        pass
+    elif month == "03" and day > "12":
+        pass
+    elif month == "03" and ((day == "12") or (day == "11")):
+        # delete zero values columns for Mainland China
+        drop_indexes = list(data.loc[data[country_column]==repeated_country[0][0]].index)
+        data = data.drop(drop_indexes).reset_index(drop=True)
+    elif month == "03" and day <= "10":
+        # delete values for UK and China
+        drop_indexes = list(data.loc[(data[country_column]==repeated_country[0][1]) &\
+                                    (data[country_column]==repeated_country[1][1])].index)
+        data = data.drop(drop_indexes).reset_index(drop=True)
+        data.loc[data[country_column]==repeated_country[1][0], country_column] = repeated_country[1][1]
+        data.loc[data[country_column]==repeated_country[0][0], country_column] = repeated_country[0][1]
+    elif month == "02":
+        # delete values for UK and China
+        drop_indexes = list(data.loc[(data[country_column]==repeated_country[0][1]) &\
+                                    (data[country_column]==repeated_country[1][1])].index)
+        data = data.drop(drop_indexes).reset_index(drop=True)
+        data.loc[data[country_column]==repeated_country[1][0], country_column] = repeated_country[1][1]
+        data.loc[data[country_column]==repeated_country[0][0], country_column] = repeated_country[0][1]
+    elif month == "01" and day == "31":
+        # delete values for UK and China
+        drop_indexes = list(data.loc[(data[country_column]==repeated_country[0][1]) &\
+                                    (data[country_column]==repeated_country[1][1])].index)
+        data = data.drop(drop_indexes).reset_index(drop=True)
+        data.loc[data[country_column]==repeated_country[1][0], country_column] = repeated_country[1][1]
+        data.loc[data[country_column]==repeated_country[0][0], country_column] = repeated_country[0][1]
+    else:
+        # delete zero values column for China and rename Mainland China to China
+        drop_indexes = list(data.loc[data[country_column]==repeated_country[0][1]].index)
+        data = data.drop(drop_indexes).reset_index(drop=True)
+        data.loc[data[country_column]==repeated_country[0][0], country_column] = repeated_country[0][1]
+
+    # remove countries if present
+    countries_to_remove = ['Antarctica','Antigua and Barbuda','Armenia','Aruba','Bermuda',
+                           'Cayman Islands', 'Curacao','Channel Islands','Cruise Ship',
+                           'Diamond Princess','Equatorial Guinea','Faroe Islands','French Guiana',
+                           'Gibraltar','Greenland','Guinea-Bissau','Guadeloupe','Guam',
+                           'Guernsey','Holy See','Hong Kong','Hong Kong SAR','Jersey','Korea, North',
+                           'MS Zaandam','Macao','Macao SAR','Macau','Maldives',
+                           'Marshall Islands','Martinique','Mayotte','Micronesia','Montenegro',
+                           'North Ireland','North Macedonia','occupied Palestinian territory',
+                           'Others','Palau','Palestine','Puerto Rico','Palau','Reunion',
+                           'Saint Barthelemy','Saint Kitts and Nevis','Saint Lucia','Saint Martin',
+                           'Saint Vincent and the Grenadines','Samoa','Sao Tome and Principe',
+                           'St. Martin','Summer Olympics 2020','Turkmenistan',
+                           'United States Virgin Islands','Vatican City',
+                           'West Bank and Gaza','Winter Olympics 2022']
+    
+    data = data.drop(data[data[country_column].isin(countries_to_remove)].index)
+    data = data.reset_index(drop=True)
+    
+    # rename countries if needed
+    countries_to_rename = get_list_inner_outer_join(np.unique(data[country_column]), 
+                                                    list(update_country_name.keys()), 
+                                                    operation="inner")
+    if len(countries_to_rename) > 0:
+        for country in countries_to_rename:
+            data.loc[data[country_column]==country, country_column] = update_country_name[country]
+    
+    return data.sort_values(country_column, ascending=True)
