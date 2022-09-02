@@ -75,3 +75,7 @@ https://trello.com/b/viV1M5M5/kanban-board-planning-stage
 **First Iteration Phase**
 
 https://trello.com/b/bE4akKy7/kanban-board-first-iteration
+
+**Second Iteration Phase**
+
+https://trello.com/b/EKJ0TL9t/kanban-board-second-iteration
