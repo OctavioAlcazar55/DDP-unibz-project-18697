@@ -242,6 +242,7 @@ def country_list_formatting(data, data_source="stringency_index",
     # By error proof on US4, dataframe needs to be sorted by country name
     return data.sort_values(country_column, ascending=True)
 
+# Function that formats the timestamp values to a common one
 def formatting_timestamp_string(data, country_column="Country"):
 
     months_str_int_map = {
@@ -282,6 +283,7 @@ def formatting_timestamp_string(data, country_column="Country"):
         
     return updated_timestamps
 
+# Function that fixes all the country names for daily data sources useful for aggregation and merging
 def check_daily_data_countries(data, file_path,
                                country_column="Country",
                                repeated_country=[["Mainland China", "China"],
@@ -383,3 +385,32 @@ def check_daily_data_countries(data, file_path,
             data.loc[data[country_column]==country, country_column] = update_country_name[country]
     
     return data.sort_values(country_column, ascending=True)
+
+# Function that calculates difference of two consecutive timestamps for daily cases data
+def calculating_daily_differences(data, column,
+                                  country_column="Country",
+                                  date_column="Timestamps"):
+    
+    timestamps = np.unique(data[date_column])
+    difference_data = []
+
+    for idx in range(len(timestamps)-1):
+        for country in np.unique(data[country_column]):
+            
+            day_one = data.loc[(data[country_column]==country) & 
+                               (data[date_column]==timestamps[idx]),
+                               column].item()
+            day_two = data.loc[(data[country_column]==country) & 
+                               (data[date_column]==timestamps[idx+1]),
+                               column].item()
+            daily_new = day_two - day_one
+        
+            difference_data.append(daily_new)   
+    
+    # initiating the list with zeros, as comparisons are not possible for first day
+    initial_difference_data = [0] * len(np.unique(data[country_column]))
+    difference_data = initial_difference_data + difference_data
+                                   
+    data["Daily "+(" ".join(column.split(" ")[1:]))] = difference_data
+                                   
+    return data
