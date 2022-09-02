@@ -6,6 +6,8 @@ import time
 
 import re
 
+from itertools import islice, cycle
+
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -119,6 +121,10 @@ def drop_columns(data, file_path,
     df = df.reset_index(drop=True)
     
     return df
+
+# Function for repeating a list N times
+def repeat(lst, times):
+    return list(islice(cycle(lst), len(lst)*times))
 
 # Function for intersection or outer difference between two lists (converted to sets
 def get_list_inner_outer_join(first_list, second_list, 
@@ -414,3 +420,29 @@ def calculating_daily_differences(data, column,
     data["Daily "+(" ".join(column.split(" ")[1:]))] = difference_data
                                    
     return data
+
+# Function for subsetting data from the merged dataframe
+def subsetting_data(data,
+                    selected_columns,
+                    countries=None,
+                    continents=None,
+                    start_date="2020-01-22",
+                    end_date="2022-08-20",
+                    use_continents=False):
+    
+    if use_continents:
+        mask = (data["Timestamps"] >= start_date) & (data["Timestamps"] <= end_date) & \
+               (data["Continent"].isin(continents))
+    else:
+        mask = (data["Timestamps"] >= start_date) & (data["Timestamps"] <= end_date) & \
+               (data["Country"].isin(countries))
+    
+    if use_continents:
+        data = data.loc[mask, ["Continent", "Timestamps", selected_columns[0], 
+                        selected_columns[1], "SI Index"]]
+        return data.groupby(["Continent","Timestamps"]).agg({selected_columns[0]: "sum",
+                                                             selected_columns[1]: "sum",
+                                                             "SI Index": "mean"}).reset_index() 
+    else:
+        return data.loc[mask, ["Country", "Timestamps", selected_columns[0], 
+                        selected_columns[1], "SI Index"]]
