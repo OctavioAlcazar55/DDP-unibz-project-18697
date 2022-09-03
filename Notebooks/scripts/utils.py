@@ -8,6 +8,8 @@ import re
 
 from itertools import islice, cycle
 
+from datetime import datetime
+
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -125,6 +127,10 @@ def drop_columns(data, file_path,
 # Function for repeating a list N times
 def repeat(lst, times):
     return list(islice(cycle(lst), len(lst)*times))
+
+# Converting date from datatime64 to string
+def convert_datetime(dt):
+    return datetime.strftime(dt, "%Y-%m-%d")
 
 # Function for intersection or outer difference between two lists (converted to sets
 def get_list_inner_outer_join(first_list, second_list, 
